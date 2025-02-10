@@ -1,21 +1,14 @@
 #Requires AutoHotkey v2.0
-#NoTrayIcon
 
-; --- First window ---
-; Wait for a window whose title CONTAINS "Left Window Title"
-hwndLeft := WinWait("Left Window Title")  ; returns a numeric handle
-WinActivate(hwndLeft)
-WinWaitActive(hwndLeft)
+; 1) Wait for a window that contains "My Window Title" in its title.
+;    WinWait returns a numeric HWND (no strings involved for WinMove).
+hwnd := WinWait("My Window Title")
 
-; Move window to (0,1080), size 768×1024
-WinMove(hwndLeft, "", 0, 1080, 768, 1024)
+; 2) Activate & wait for it to become active:
+WinActivate(hwnd)
+WinWaitActive(hwnd)
 
-
-; --- Second window ---
-; Wait for a window whose title CONTAINS "Right Window Title"
-hwndRight := WinWait("Right Window Title")
-WinActivate(hwndRight)
-WinWaitActive(hwndRight)
-
-; Move window to (768,1080), size 768×1024
-WinMove(hwndRight, "", 768, 1080, 768, 1024)
+; 3) Move the window to numeric coordinates (X=0, Y=1080) with size 768×1024.
+;    Notice the second parameter is blank (nothing between the commas).
+;    That blank is for "WinText" (also a string), which we don't need.
+WinMove(hwnd, , 0, 1080, 768, 1024)
