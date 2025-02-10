@@ -1,26 +1,39 @@
-#Requires AutoHotkey v2.0
+; ---------------------------------------------------
+; AHK v1 Script: Move the window "LMFD" to Monitor 3 (Centered)
+; ---------------------------------------------------
+#SingleInstance force
+SetTitleMatchMode, 2  ; Allows partial matching of window titles
 
-; Define the window title to search for.
 winTitle := "LMFD"
 
-; Retrieve the window's handle (hWnd) using its title.
-if hWnd := WinExist(winTitle)
+; Check if a window with "LMFD" in its title exists.
+if WinExist(winTitle)
 {
-    ; Retrieve the window's current position and size as an object.
-    pos := WinGetPos(hWnd)  ; pos.X, pos.Y, pos.Width, pos.Height
-
+    ; Get the window's current position and size.
+    ; The variables winX, winY, winW, and winH will contain the window's coordinates and dimensions.
+    WinGetPos, winX, winY, winW, winH, %winTitle%
+    
     ; Retrieve monitor 3's coordinates.
-    ; In AHK v2, SysGet expects a number (monitor index) as its sole parameter.
-    mon3 := SysGet(3)       ; mon3.Left, mon3.Top, mon3.Right, mon3.Bottom
-
-    ; Calculate new coordinates to center the window on monitor 3.
-    newX := mon3.Left + ((mon3.Right - mon3.Left - pos.Width) // 2)
-    newY := mon3.Top  + ((mon3.Bottom - mon3.Top - pos.Height) // 2)
-
+    ; This command sets the following variables:
+    ;   mon3Left, mon3Top, mon3Right, mon3Bottom
+    SysGet, mon3, Monitor, 3
+    
+    ; Calculate the width and height of monitor 3.
+    monWidth  := mon3Right - mon3Left
+    monHeight := mon3Bottom - mon3Top
+    
+    ; Calculate new X and Y to center the window on monitor 3.
+    newX := mon3Left + ((monWidth - winW) // 2)
+    newY := mon3Top  + ((monHeight - winH) // 2)
+    
     ; Move the window to the new coordinates.
-    WinMove(hWnd, newX, newY)
+    WinMove, %winTitle%,, %newX%, %newY%
+    
+    ; --- Alternative: Snap the window's top-left corner to monitor 3 ---
+    ; Uncomment the next line and comment out the above WinMove line if preferred.
+    ; WinMove, %winTitle%,, %mon3Left%, %mon3Top%
 }
 else
 {
-    MsgBox "Window 'LMFD' not found."
+    MsgBox, Window "LMFD" not found.
 }
