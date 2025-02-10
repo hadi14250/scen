@@ -1,11 +1,6 @@
 #Requires AutoHotkey v2.0
+MsgBox("Running version: " A_AhkVersion)
 
-; --- Move the "left" window ---
-WinActivate("Left Window Title")
-WinWaitActive("Left Window Title")
-WinMove("Left Window Title",, 0, 1080, 768, 1024)
-
-; --- Move the "right" window ---
-WinActivate("Right Window Title")
-WinWaitActive("Right Window Title")
-WinMove("Right Window Title",, 768, 1080, 768, 1024)
+; We're not even dealing with real windows here.
+; We just call WinMove with test values in the correct v2 order:
+WinMove("Untitled - Notepad", , 100, 100, 500, 300)
