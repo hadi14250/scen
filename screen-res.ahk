@@ -1,30 +1,30 @@
 #Requires AutoHotkey v2.0
 
-; Define the window title (adjust if necessary)
+; Define the window title to search for
 winTitle := "LMFD"
 
-if WinExist(winTitle)
+; Get the window handle (hWnd) from its title.
+if hWnd := WinExist(winTitle)
 {
+    ; Prepare variables for the window's position and size.
+    X := 0, Y := 0, Width := 0, Height := 0
+    
+    ; Retrieve the current window's position and size.
+    ; WinGetPos requires variables passed by reference for output.
+    WinGetPos(hWnd, X, Y, Width, Height)
+    
     ; Retrieve monitor 3's coordinates.
-    ; SysGet expects a number when retrieving a monitor's info.
+    ; SysGet expects a number (the monitor index) as its only parameter.
     mon3 := SysGet(3)
     
-    ; Get the current window's position and size.
-    ; WinGetPos returns an object with properties: X, Y, Width, and Height.
-    pos := WinGetPos(winTitle)
-    
     ; Calculate new coordinates to center the window on monitor 3.
-    newX := mon3.Left + ((mon3.Right - mon3.Left - pos.Width) // 2)
-    newY := mon3.Top  + ((mon3.Bottom - mon3.Top - pos.Height) // 2)
+    newX := mon3.Left + ((mon3.Right - mon3.Left - Width) // 2)
+    newY := mon3.Top  + ((mon3.Bottom - mon3.Top - Height) // 2)
     
     ; Move the window to the new coordinates.
-    WinMove(winTitle, newX, newY)
-    
-    ; --- Alternative ---
-    ; To simply snap the window's top-left corner to monitor 3's top-left, use:
-    ; WinMove(winTitle, mon3.Left, mon3.Top)
+    WinMove(hWnd, newX, newY)
 }
 else
 {
-    MsgBox "Window 'LMFD' not found."
+    MsgBox("Window 'LMFD' not found.")
 }
