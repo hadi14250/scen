@@ -1,10 +1,13 @@
 #SingleInstance force
 SetTitleMatchMode, 2
-targetWindow := "YourWindowTitle"  ; Replace with the actual (or partial) window title
+DetectHiddenWindows, On
 
-if WinExist(targetWindow)
+targetWindow := "Exact Window Title"
+
+if WinWait(targetWindow, "", 10)
 {
     hWnd := WinExist(targetWindow)
+
     WinActivate, ahk_id %hWnd%
     WinWaitActive, ahk_id %hWnd%,, 5
     Sleep, 3000
