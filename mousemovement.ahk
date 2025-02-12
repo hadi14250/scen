@@ -1,31 +1,31 @@
 #Requires AutoHotkey v2.0
 
 ; --- Parameter Handling ---
-; If at least three parameters are provided, convert them to numbers.
+; If fewer than 3 parameters are provided, use defaults.
 if A_Args.Length < 3 {
     offsetX   := 500    ; Default horizontal offset
     offsetY   := 500    ; Default vertical offset
     monitorNo := 1      ; Default monitor number
 } else {
-    offsetX   := +A_Args[1]   ; The unary plus converts to a number.
-    offsetY   := +A_Args[2]
-    monitorNo := +A_Args[3]
+    ; Force numeric conversion by adding 0
+    offsetX   := A_Args[1] + 0
+    offsetY   := A_Args[2] + 0
+    monitorNo := A_Args[3] + 0
 }
 
-; --- Get Monitor Information ---
-; SysGet("Monitor") returns an object (an array) of monitor info.
+; --- Retrieve Monitor Information ---
+; SysGet("Monitor") returns an object (array) of monitors.
 monitors := SysGet("Monitor")
-
-; Ensure the specified monitor exists.
-if !monitors.HasKey(monitorNo)
+if !monitors.HasKey(monitorNo) {
+    ; If the specified monitor doesn't exist, exit.
     ExitApp()
-
+}
 mon := monitors[monitorNo]
 targetX := mon.Left + offsetX
 targetY := mon.Top + offsetY
 
 ; --- Move the Mouse ---
-; Set coordinate mode for the mouse to "Screen"
+; Set the mouse coordinate mode to "Screen"
 CoordMode("Mouse", "Screen")
 MouseMove(targetX, targetY, 0)
 
