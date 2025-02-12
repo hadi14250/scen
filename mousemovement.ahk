@@ -1,11 +1,14 @@
 #Requires AutoHotkey v2.0
-; This v2 script expects two command-line parameters: targetX and targetY.
-if ParamCount() < 2 {
+
+if A_Args.Length() < 2 {
     MsgBox("Usage: MouseMover.exe targetX targetY")
     ExitApp()
 }
-targetX := Param(1)
-targetY := Param(2)
-; Set coordinate mode to screen (default in v2 is screen)
+
+targetX := A_Args[1]
+targetY := A_Args[2]
+
+; Move the mouse instantly to the specified coordinates.
 MouseMove(targetX, targetY, 0)
+
 ExitApp()
