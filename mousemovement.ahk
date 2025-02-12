@@ -1,6 +1,6 @@
 #Requires AutoHotkey v2.0
 
-; Use command-line parameters if provided; otherwise, use default values.
+; --- Parameter Handling ---
 if A_Args.Length < 3 {
     offsetX   := 500    ; Default horizontal offset
     offsetY   := 500    ; Default vertical offset
@@ -11,18 +11,23 @@ if A_Args.Length < 3 {
     monitorNo := A_Args[3]
 }
 
-; Retrieve the target monitor's top-left coordinates using the proper v2 syntax.
-monLeft := SysGet("MonitorLeft", monitorNo)
-monTop  := SysGet("MonitorTop", monitorNo)
+; --- Get Monitor Information ---
+; SysGet("Monitor") returns an object (array) of monitors.
+monitors := SysGet("Monitor")
 
-; Calculate the absolute target coordinates.
-targetX := monLeft + offsetX
-targetY := monTop + offsetY
+; Check if the specified monitor exists.
+if !monitors.HasKey(monitorNo) {
+    ; If not, exit silently.
+    ExitApp()
+}
 
-; Set the coordinate mode for the mouse to screen.
+mon := monitors[monitorNo]
+targetX := mon.Left + offsetX
+targetY := mon.Top + offsetY
+
+; --- Move the Mouse ---
+; Set coordinate mode for the mouse to "Screen".
 CoordMode("Mouse", "Screen")
-
-; Move the mouse instantly to the target coordinates.
 MouseMove(targetX, targetY, 0)
 
 ExitApp()
