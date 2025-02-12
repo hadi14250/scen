@@ -11,15 +11,16 @@ if A_Args.Length < 3 {
     monitorNo := A_Args[3]
 }
 
-; Retrieve the target monitor's top-left coordinates using v2 SysGet options.
-monLeft := SysGet("MonitorLeft", monitorNo)
-monTop  := SysGet("MonitorTop", monitorNo)
+; Retrieve the target monitor's information as an object.
+mon := SysGet("Monitor", monitorNo)
+monLeft := mon.Left
+monTop  := mon.Top
 
 ; Calculate the absolute target coordinates.
 targetX := monLeft + offsetX
 targetY := monTop + offsetY
 
-; Set coordinate mode for the mouse to screen.
+; Set the coordinate mode for the mouse to screen.
 CoordMode("Mouse", "Screen")
 
 ; Move the mouse instantly to the target coordinates.
