@@ -23,21 +23,26 @@ FileDelete, %logFile%
 ; MAPPING CONFIGURATION
 ; ---------------------------
 ; Define the mapping for each button on each MFD.
-; Modify or add new lines as needed.
+; Each mapping defines:
+;   monitor: The monitor number (as returned by SysGet)
+;   x: The horizontal offset (in pixels) relative to that monitor's top-left corner
+;   y: The vertical offset (in pixels) relative to that monitor's top-left corner
 global mappingLeft := {}   ; For left MFD (LMFD)
 global mappingRight := {}  ; For right MFD (RMFD)
 
 ; --- Example mappings for Left MFD (LMFD) ---
-mappingLeft["1"] := { monitor: 2, x: 300, y: 400 }   ; When button 1 is pressed on LMFD, click at (300,400) on monitor 2.
-mappingLeft["2"] := { monitor: 2, x: 350, y: 450 }   ; When button 2 is pressed on LMFD, click at (350,450) on monitor 2.
-; Add more mappings for left MFD as needed:
-; mappingLeft["3"] := { monitor: 2, x: 400, y: 500 }
+; When button "1" is pressed on LMFD, move the mouse to (500,500) on monitor 1.
+mappingLeft["1"] := { monitor: 1, x: 500, y: 500 }
+; When button "2" is pressed on LMFD, move the mouse to (550,550) on monitor 1.
+mappingLeft["2"] := { monitor: 1, x: 550, y: 550 }
+; (Add more mappings for left MFD as needed...)
 
 ; --- Example mappings for Right MFD (RMFD) ---
-mappingRight["1"] := { monitor: 2, x: 500, y: 600 }  ; When button 1 is pressed on RMFD, click at (500,600) on monitor 2.
-mappingRight["2"] := { monitor: 2, x: 550, y: 650 }  ; When button 2 is pressed on RMFD, click at (550,650) on monitor 2.
-; Add more mappings for right MFD as needed:
-; mappingRight["3"] := { monitor: 2, x: 600, y: 700 }
+; When button "1" is pressed on RMFD, move the mouse to (600,600) on monitor 1.
+mappingRight["1"] := { monitor: 1, x: 600, y: 600 }
+; When button "2" is pressed on RMFD, move the mouse to (650,650) on monitor 1.
+mappingRight["2"] := { monitor: 1, x: 650, y: 650 }
+; (Add more mappings for right MFD as needed...)
 
 ; ---------------------------
 ; POLLING CONFIGURATION
@@ -46,10 +51,10 @@ mappingRight["2"] := { monitor: 2, x: 550, y: 650 }  ; When button 2 is pressed 
 pollInterval := 100         ; Polling interval in milliseconds
 numButtons := 32            ; Number of buttons to poll per joystick
 
-; Initialize previous state arrays for each MFD.
 global prevStateLeft := []   ; For left MFD (LMFD)
 global prevStateRight := []  ; For right MFD (RMFD)
 
+; Initialize previous state for each button to "U" (up)
 Loop, %numButtons%
 {
     prevStateLeft[A_Index] := "U"
@@ -83,7 +88,7 @@ CheckCougarMFD:
             if (mappingLeft.HasKey(btnKey))
             {
                 params := mappingLeft[btnKey]
-                SimulateMouseClick(params.monitor, params.x, params.y)
+                SimulateMouseMove(params.monitor, params.x, params.y)
             }
         }
         prevStateLeft[A_Index] := state
@@ -107,7 +112,7 @@ CheckCougarMFD:
             if (mappingRight.HasKey(btnKey))
             {
                 params := mappingRight[btnKey]
-                SimulateMouseClick(params.monitor, params.x, params.y)
+                SimulateMouseMove(params.monitor, params.x, params.y)
             }
         }
         prevStateRight[A_Index] := state
@@ -116,10 +121,10 @@ CheckCougarMFD:
 return
 
 ; ---------------------------
-; SIMULATE MOUSE CLICK FUNCTION
+; SIMULATE MOUSE MOVE FUNCTION (NO CLICK)
 ; ---------------------------
-SimulateMouseClick(monitorNum, xOffset, yOffset) {
-    ; Get the top-left coordinates of the target monitor.
+SimulateMouseMove(monitorNum, xOffset, yOffset) {
+    ; Get the target monitor's top-left coordinates.
     SysGet, monLeft, Monitor, %monitorNum%, Left
     SysGet, monTop, Monitor, %monitorNum%, Top
     targetX := monLeft + xOffset
@@ -128,11 +133,10 @@ SimulateMouseClick(monitorNum, xOffset, yOffset) {
     ; Save the current mouse position.
     MouseGetPos, origX, origY
     CoordMode, Mouse, Screen
-    ; Move the mouse to the target coordinates.
+    ; Move the mouse instantly to the target coordinates.
     MouseMove, %targetX%, %targetY%, 0
-    Sleep, 50  ; Brief delay for the move.
-    Click      ; Simulate a left-click.
-    Sleep, 1000 ; (For debugging) Leave the mouse at the target for 1 second.
+    ; For debugging, leave the mouse at the target for 1 second.
+    Sleep, 1000
     ; Optionally, return the mouse to its original position.
     MouseMove, %origX%, %origY%, 0
 }
