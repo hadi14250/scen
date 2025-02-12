@@ -3,52 +3,77 @@
 SendMode Input
 SetWorkingDir %A_ScriptDir%
 
+; Define the log file path (created in the same folder as the script)
 logFile := A_ScriptDir "\joystick.log"
 
-; Clear any existing log file on startup (optional)
+; (Optional) Clear any existing log file on startup
 FileDelete, %logFile%
 
-; Make the script persistent so it keeps polling
-#Persistent
+; Global associative arrays to hold previous button states for each joystick
+global prevState1 := {}  ; For Joystick 1 (Left MFD)
+global prevState2 := {}  ; For Joystick 2 (Right MFD)
 
-; Polling interval (in milliseconds)
-pollInterval := 100
+; How many buttons to poll per joystick
+numButtons := 16
 
-SetTimer, CheckJoysticks, %pollInterval%
+; Start the polling timer (every 100 ms)
+SetTimer, CheckJoysticks, 100
 return
 
 CheckJoysticks:
 {
-    ; Check Joystick 1 buttons (assuming Left MFD is Joystick 1)
-    Loop, 32
+    ; --- Check Joystick 1 (Left MFD) ---
+    Loop, %numButtons%
     {
-        hotkey := "1Joy" A_Index
+        index := A_Index
+        hotkey := "1Joy" index
         GetKeyState, state, %hotkey%
-        if (state = "D")  ; if button is pressed (D = down)
+        
+        ; Initialize previous state if not set
+        if (!prevState1.HasKey(index))
+            prevState1[index] := "U"
+        
+        ; If the state has changed...
+        if (state != prevState1[index])
         {
-            FormatTime, timeStamp,, yyyy-MM-dd HH:mm:ss
-            msg := timeStamp " - Joystick 1: Button " A_Index " pressed`n"
-            FileAppend, %msg%, %logFile%
-            ; Display a brief tooltip for debugging (optional)
-            ToolTip, %msg%
-            Sleep, 200  ; debounce delay so you don't log continuously
-            ToolTip  ; clear tooltip
+            ; Only log on transition from "U" (up) to "D" (down)
+            if (state = "D")
+            {
+                FormatTime, timeStamp,, yyyy-MM-dd HH:mm:ss
+                msg := timeStamp " - Joystick 1: Button " index " pressed`n"
+                FileAppend, %msg%, %logFile%
+                ; (Optional) Show a brief tooltip for debugging
+                ToolTip, %msg%
+                Sleep, 200
+                ToolTip
+            }
+            ; Update the previous state
+            prevState1[index] := state
         }
     }
     
-    ; Check Joystick 2 buttons (assuming Right MFD is Joystick 2)
-    Loop, 32
+    ; --- Check Joystick 2 (Right MFD) ---
+    Loop, %numButtons%
     {
-        hotkey := "2Joy" A_Index
+        index := A_Index
+        hotkey := "2Joy" index
         GetKeyState, state, %hotkey%
-        if (state = "D")
+        
+        if (!prevState2.HasKey(index))
+            prevState2[index] := "U"
+            
+        if (state != prevState2[index])
         {
-            FormatTime, timeStamp,, yyyy-MM-dd HH:mm:ss
-            msg := timeStamp " - Joystick 2: Button " A_Index " pressed`n"
-            FileAppend, %msg%, %logFile%
-            ToolTip, %msg%
-            Sleep, 200
-            ToolTip
+            if (state = "D")
+            {
+                FormatTime, timeStamp,, yyyy-MM-dd HH:mm:ss
+                msg := timeStamp " - Joystick 2: Button " index " pressed`n"
+                FileAppend, %msg%, %logFile%
+                ToolTip, %msg%
+                Sleep, 200
+                ToolTip
+            }
+            prevState2[index] := state
         }
     }
 }
