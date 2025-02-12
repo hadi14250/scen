@@ -1,23 +1,22 @@
-#NoEnv
-SendMode Input
-CoordMode, Mouse, Screen
+#Requires AutoHotkey v2.0
 
-F1::
-    ; Get monitor 1's top-left coordinates.
-    SysGet, monLeft, Monitor, 1, Left
-    SysGet, monTop, Monitor, 1, Top
+; Set the mouse coordinate mode to screen (so coordinates are absolute).
+CoordMode("Mouse", "Screen")
 
-    ; Set your desired offsets.
-    offsetX := 500   ; Change this value as needed.
-    offsetY := 500   ; Change this value as needed.
-
-    ; Compute the target coordinates.
+F1:: {
+    ; For example, assume the primary monitor's top-left is at (0,0)
+    ; and you want to move the mouse to (500, 500).
+    ; (You can change these values as needed.)
+    monLeft := 0  ; Top-left X of monitor 1 (usually 0)
+    monTop  := 0  ; Top-left Y of monitor 1 (usually 0)
+    offsetX := 500
+    offsetY := 500
     targetX := monLeft + offsetX
     targetY := monTop + offsetY
 
-    ; Display the computed values for debugging.
-    MsgBox, Monitor 1 Top-Left: (%monLeft%, %monTop%)`nCalculated Target: (%targetX%, %targetY%)
+    ; Move the mouse instantly to the target coordinates.
+    MouseMove(targetX, targetY, 0)
     
-    ; Move the mouse to the target coordinates using SetCursorPos.
-    DllCall("SetCursorPos", "Int", targetX, "Int", targetY)
-return
+    ; Display a message box showing the target coordinates.
+    MsgBox("Mouse moved to: " targetX ", " targetY)
+}
