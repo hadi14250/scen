@@ -4,13 +4,14 @@ SendMode Input
 SetWorkingDir %A_ScriptDir%
 
 ; ---------------------------
-; CONFIGURATION: Updated Mapping
+; CONFIGURATION
 ; ---------------------------
-; Now, set the joystick numbers based on joy.cpl so that:
-; - Joystick 4 is the RMFD.
-; - Joystick 7 is the LMFD.
-global Cougar_Left := 7     ; Left MFD (LMFD) is on joystick 7
-global Cougar_Right := 4    ; Right MFD (RMFD) is on joystick 4
+; Set the joystick numbers for your Cougar MFDs as reported in joy.cpl.
+; In this configuration:
+;   - The left MFD (LMFD) is on joystick 7.
+;   - The right MFD (RMFD) is on joystick 4.
+global Cougar_Left := 7    ; LMFD
+global Cougar_Right := 4   ; RMFD
 
 ; ---------------------------
 ; LOG FILE SETUP
@@ -19,17 +20,36 @@ logFile := A_ScriptDir "\joystick.log"
 FileDelete, %logFile%
 
 ; ---------------------------
+; MAPPING CONFIGURATION
+; ---------------------------
+; Define the mapping for each button on each MFD.
+; Modify or add new lines as needed.
+global mappingLeft := {}   ; For left MFD (LMFD)
+global mappingRight := {}  ; For right MFD (RMFD)
+
+; --- Example mappings for Left MFD (LMFD) ---
+mappingLeft["1"] := { monitor: 2, x: 300, y: 400 }   ; When button 1 is pressed on LMFD, click at (300,400) on monitor 2.
+mappingLeft["2"] := { monitor: 2, x: 350, y: 450 }   ; When button 2 is pressed on LMFD, click at (350,450) on monitor 2.
+; Add more mappings for left MFD as needed:
+; mappingLeft["3"] := { monitor: 2, x: 400, y: 500 }
+
+; --- Example mappings for Right MFD (RMFD) ---
+mappingRight["1"] := { monitor: 2, x: 500, y: 600 }  ; When button 1 is pressed on RMFD, click at (500,600) on monitor 2.
+mappingRight["2"] := { monitor: 2, x: 550, y: 650 }  ; When button 2 is pressed on RMFD, click at (550,650) on monitor 2.
+; Add more mappings for right MFD as needed:
+; mappingRight["3"] := { monitor: 2, x: 600, y: 700 }
+
+; ---------------------------
 ; POLLING CONFIGURATION
 ; ---------------------------
 #Persistent
-pollInterval := 100         ; Polling interval (milliseconds)
+pollInterval := 100         ; Polling interval in milliseconds
 numButtons := 32            ; Number of buttons to poll per joystick
 
-; Initialize previous state arrays for each Cougar MFD.
-global prevStateLeft := []   ; For left Cougar MFD (LMFD)
-global prevStateRight := []  ; For right Cougar MFD (RMFD)
+; Initialize previous state arrays for each MFD.
+global prevStateLeft := []   ; For left MFD (LMFD)
+global prevStateRight := []  ; For right MFD (RMFD)
 
-; Set initial state ("U" for Up) for each button.
 Loop, %numButtons%
 {
     prevStateLeft[A_Index] := "U"
@@ -40,6 +60,9 @@ Loop, %numButtons%
 SetTimer, CheckCougarMFD, %pollInterval%
 return
 
+; ---------------------------
+; POLLING FUNCTION
+; ---------------------------
 CheckCougarMFD:
 {
     ; --- Check buttons for Left Cougar MFD (LMFD) ---
@@ -47,7 +70,6 @@ CheckCougarMFD:
     {
         hotkey := Cougar_Left "Joy" A_Index
         GetKeyState, state, %hotkey%
-        
         if (state = "D" and prevStateLeft[A_Index] = "U")
         {
             FormatTime, timeStamp,, yyyy-MM-dd HH:mm:ss
@@ -57,7 +79,7 @@ CheckCougarMFD:
             ToolTip, %msg%
             Sleep, 200  ; Debounce delay
             ToolTip
-            btnKey := A_Index ""
+            btnKey := A_Index ""  ; Convert button number to string
             if (mappingLeft.HasKey(btnKey))
             {
                 params := mappingLeft[btnKey]
@@ -72,7 +94,6 @@ CheckCougarMFD:
     {
         hotkey := Cougar_Right "Joy" A_Index
         GetKeyState, state, %hotkey%
-        
         if (state = "D" and prevStateRight[A_Index] = "U")
         {
             FormatTime, timeStamp,, yyyy-MM-dd HH:mm:ss
@@ -95,57 +116,38 @@ CheckCougarMFD:
 return
 
 ; ---------------------------
-; MAPPING CONFIGURATION
-; ---------------------------
-; Define the mapping for each button on each MFD.
-; The mapping is an object where the key is the button number (as a string) and the value is an object with:
-;   monitor: Monitor number (as used by SysGet)
-;   x: Horizontal offset (pixels) relative to the monitor's top-left corner
-;   y: Vertical offset (pixels) relative to the monitor's top-left corner
-global mappingLeft := {}   ; For left MFD (LMFD)
-global mappingRight := {}  ; For right MFD (RMFD)
-
-; Example mappings:
-mappingLeft["1"] := { monitor: 2, x: 300, y: 400 }   ; For LMFD (joystick 7) button 1
-mappingRight["1"] := { monitor: 2, x: 500, y: 600 }  ; For RMFD (joystick 4) button 1
-
-; (Add additional mappings as needed...)
-
-; ---------------------------
 ; SIMULATE MOUSE CLICK FUNCTION
 ; ---------------------------
 SimulateMouseClick(monitorNum, xOffset, yOffset) {
+    ; Get the top-left coordinates of the target monitor.
     SysGet, monLeft, Monitor, %monitorNum%, Left
     SysGet, monTop, Monitor, %monitorNum%, Top
     targetX := monLeft + xOffset
     targetY := monTop + yOffset
     
+    ; Save the current mouse position.
     MouseGetPos, origX, origY
     CoordMode, Mouse, Screen
+    ; Move the mouse to the target coordinates.
     MouseMove, %targetX%, %targetY%, 0
-    Sleep, 50
-    Click
-    Sleep, 1000  ; Leave mouse at target for 1 second (for debugging)
+    Sleep, 50  ; Brief delay for the move.
+    Click      ; Simulate a left-click.
+    Sleep, 1000 ; (For debugging) Leave the mouse at the target for 1 second.
+    ; Optionally, return the mouse to its original position.
     MouseMove, %origX%, %origY%, 0
 }
 
 ; ---------------------------
-; FUNCTION: GetJoystickName
-; Attempts to retrieve the device name using joyGetDevCaps.
-; If the name is empty or generic, it falls back to known names.
+; GET JOYSTICK NAME FUNCTION
 ; ---------------------------
 GetJoystickName(joyID) {
     VarSetCapacity(joyCaps, 256, 0)
-    if (DllCall("joyGetDevCaps", "UInt", joyID - 1, "UInt", &joyCaps, "UInt", 256) = 0)
-    {
+    if (DllCall("joyGetDevCaps", "UInt", joyID - 1, "UInt", &joyCaps, "UInt", 256) = 0) {
         name := StrGet(&joyCaps + 4, 32)
         if (name != "" && name != "HID-compliant game controller")
             return name
     }
     global Cougar_Left, Cougar_Right
-    ; Notice: Now, since we swapped the physical assignments:
-    ; - Cougar_Left (LMFD) is joystick 7
-    ; - Cougar_Right (RMFD) is joystick 4
     if (joyID = Cougar_Right)
          return "F-16 RMFD"
     else if (joyID = Cougar_Left)
