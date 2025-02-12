@@ -3,65 +3,100 @@
 SendMode Input
 SetWorkingDir %A_ScriptDir%
 
-; --- Set the joystick numbers for your Cougar MFDs ---
-; Change these values to match what Windows reports in joy.cpl for your Cougar MFDs.
-Cougar_Left := 3    ; For example, if the left Cougar MFD is registered as Joystick 3
-Cougar_Right := 4   ; For example, if the right Cougar MFD is registered as Joystick 4
+; --- Function: GetJoystickName ---
+; Returns the product name for the given joystick number (1-based)
+GetJoystickName(joyID) {
+    ; Allocate a buffer for the JOYCAPS structure (256 bytes is usually enough)
+    VarSetCapacity(joyCaps, 256, 0)
+    ; Note: The joyGetDevCaps call expects the device index as (joyID - 1)
+    if (DllCall("joyGetDevCaps", "UInt", joyID-1, "UInt", &joyCaps, "UInt", 256) != 0)
+        return ""
+    ; The product name (szPname) is stored at offset 4, and is usually 32 characters.
+    name := StrGet(&joyCaps + 4, 32)
+    return name
+}
 
-; --- Log file setup ---
+; --- Automatically Detect F-16 MFD Devices ---
+maxJoy := 16  ; Adjust if you expect more than 16 devices.
+leftMFD := 0
+rightMFD := 0
+
+Loop, %maxJoy%
+{
+    joyID := A_Index
+    jName := GetJoystickName(joyID)
+    if (jName != "")
+    {
+        ; For debugging, you can output the joystick number and name:
+        ; MsgBox, Joystick %joyID%: %jName%
+        if InStr(jName, "F-16 LMFD")
+            leftMFD := joyID
+        else if InStr(jName, "F-16 RMFD")
+            rightMFD := joyID
+    }
+}
+
+if (leftMFD = 0 or rightMFD = 0)
+{
+    MsgBox, 16, Error, Could not detect both F-16 LMFD and RMFD.`nLeftMFD: %leftMFD%`nRightMFD: %rightMFD%
+    ExitApp
+}
+else
+{
+    MsgBox, 64, Cougar MFD Detection, Detected:`nF-16 LMFD as Joystick %leftMFD%`nF-16 RMFD as Joystick %rightMFD%
+}
+
+; --- Now use these variables in your polling code ---
+; Define the log file path
 logFile := A_ScriptDir "\joystick.log"
 FileDelete, %logFile%
 
 #Persistent
 pollInterval := 100         ; Polling interval (milliseconds)
-numButtons := 32            ; Number of buttons to poll per joystick
+numButtons := 32            ; Number of buttons to poll per device
 
-; Initialize previous state arrays for each Cougar MFD.
-global prevStateLeft := []   ; For Left Cougar MFD
-global prevStateRight := []  ; For Right Cougar MFD
+; Initialize previous state arrays for each MFD.
+global prevStateLeft := []   ; For F-16 LMFD
+global prevStateRight := []  ; For F-16 RMFD
 
-; Set initial state ("U" for Up) for each button.
 Loop, %numButtons%
 {
     prevStateLeft[A_Index] := "U"
     prevStateRight[A_Index] := "U"
 }
 
-; Set a timer to poll the Cougar MFDs every pollInterval milliseconds.
-SetTimer, CheckCougarMFD, %pollInterval%
+; Set the timer to poll the MFDs every pollInterval ms.
+SetTimer, CheckMFDs, %pollInterval%
 return
 
-CheckCougarMFD:
+CheckMFDs:
 {
-    ; --- Check buttons for Left Cougar MFD ---
+    ; --- Check buttons for F-16 LMFD (Left MFD) ---
     Loop, %numButtons%
     {
-        hotkey := Cougar_Left "Joy" A_Index
+        hotkey := leftMFD "Joy" A_Index
         GetKeyState, state, %hotkey%
-        
-        ; Log only if the button changes from Up to Down.
         if (state = "D" and prevStateLeft[A_Index] = "U")
         {
             FormatTime, timeStamp,, yyyy-MM-dd HH:mm:ss
-            msg := timeStamp " - Cougar Left (Joystick " Cougar_Left "): Button " A_Index " pressed`n"
+            msg := timeStamp " - F-16 LMFD (Joystick " leftMFD "): Button " A_Index " pressed`n"
             FileAppend, %msg%, %logFile%
             ToolTip, %msg%
-            Sleep, 200  ; Debounce delay
+            Sleep, 200  ; debounce delay
             ToolTip
         }
         prevStateLeft[A_Index] := state
     }
     
-    ; --- Check buttons for Right Cougar MFD ---
+    ; --- Check buttons for F-16 RMFD (Right MFD) ---
     Loop, %numButtons%
     {
-        hotkey := Cougar_Right "Joy" A_Index
+        hotkey := rightMFD "Joy" A_Index
         GetKeyState, state, %hotkey%
-        
         if (state = "D" and prevStateRight[A_Index] = "U")
         {
             FormatTime, timeStamp,, yyyy-MM-dd HH:mm:ss
-            msg := timeStamp " - Cougar Right (Joystick " Cougar_Right "): Button " A_Index " pressed`n"
+            msg := timeStamp " - F-16 RMFD (Joystick " rightMFD "): Button " A_Index " pressed`n"
             FileAppend, %msg%, %logFile%
             ToolTip, %msg%
             Sleep, 200
