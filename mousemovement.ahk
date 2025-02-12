@@ -1,19 +1,19 @@
 #Requires AutoHotkey v2.0
 
 ; Use command-line parameters if provided; otherwise, use default values.
-if A_Args.Length >= 3 {
-    offsetX   := A_Args[1]   ; Horizontal offset from monitor's top-left
-    offsetY   := A_Args[2]   ; Vertical offset from monitor's top-left
-    monitorNo := A_Args[3]   ; Monitor number
+if A_Args.Length < 3 {
+    offsetX   := 500    ; Default horizontal offset
+    offsetY   := 500    ; Default vertical offset
+    monitorNo := 1      ; Default monitor number
 } else {
-    offsetX   := 500        ; Default horizontal offset
-    offsetY   := 500        ; Default vertical offset
-    monitorNo := 1          ; Default monitor number
+    offsetX   := A_Args[1]
+    offsetY   := A_Args[2]
+    monitorNo := A_Args[3]
 }
 
-; Get the target monitor's top-left coordinates.
-monLeft := SysGet("Monitor", monitorNo, "Left")
-monTop  := SysGet("Monitor", monitorNo, "Top")
+; Retrieve the target monitor's top-left coordinates using v2 SysGet options.
+monLeft := SysGet("MonitorLeft", monitorNo)
+monTop  := SysGet("MonitorTop", monitorNo)
 
 ; Calculate the absolute target coordinates.
 targetX := monLeft + offsetX
