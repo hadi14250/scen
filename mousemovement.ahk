@@ -11,10 +11,9 @@ if A_Args.Length < 3 {
     monitorNo := A_Args[3]
 }
 
-; Retrieve the target monitor's information as an object.
-mon := SysGet("Monitor", monitorNo)
-monLeft := mon.Left
-monTop  := mon.Top
+; Retrieve the target monitor's top-left coordinates using the proper v2 syntax.
+monLeft := SysGet("MonitorLeft", monitorNo)
+monTop  := SysGet("MonitorTop", monitorNo)
 
 ; Calculate the absolute target coordinates.
 targetX := monLeft + offsetX
