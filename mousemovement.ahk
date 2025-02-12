@@ -14,12 +14,13 @@ if A_Args.Length < 3 {
 }
 
 ; --- Retrieve Monitor Information ---
-; SysGet("Monitor") returns an object (array) of monitors.
+; In v2, SysGet("Monitor") returns an object (array) of monitor info.
 monitors := SysGet("Monitor")
 if !monitors.HasKey(monitorNo) {
     ; If the specified monitor doesn't exist, exit.
-    ExitApp()
+    ExitApp("Monitor " monitorNo " not found.")
 }
+
 mon := monitors[monitorNo]
 targetX := mon.Left + offsetX
 targetY := mon.Top + offsetY
